@@ -107,7 +107,7 @@ LESSON_DURATION = 45  # минут
 BREAK_DURATION = 15  # минут
 
 # Токен вашего бота
-TOKEN = "7980356941:AAGeIBSTnxQOkTfP_G6Oc4B6XY0ALj2afEk"
+TOKEN = os.getenv("BOT_TOKEN")
 
 # Хранение заметок пользователей (в памяти)
 user_notes = {}
