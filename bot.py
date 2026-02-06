@@ -1,4 +1,6 @@
+import os
 import logging
+import time
 from datetime import datetime, timedelta
 import pytz
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
@@ -62,7 +64,7 @@ DAY_NAMES = {
     3: "Четверг",
     4: "Пятница",
     5: "Суббота",
-    6: "Воскресенье"
+    6: "Воскресеньe"
 }
 
 # Эмодзи для дней недели
@@ -73,7 +75,7 @@ DAY_EMOJIS = {
     3: "📗",  # Четверг
     4: "📙",  # Пятница
     5: "🎉",  # Суббота
-    6: "🎉"  # Воскресенье
+    6: "🎉"   # Воскресенье
 }
 
 # Эмодзи для предметов (словарь)
@@ -249,8 +251,7 @@ def check_auth(user_id):
             return False, "timeout"
 
     # Если пользователь уже авторизован (была активность в пределах 10 минут)
-    if user_id in last_activity and now - last_activity[
-            user_id] <= AUTH_TIMEOUT:
+    if user_id in last_activity and now - last_activity[user_id] <= AUTH_TIMEOUT:
         return True, "authorized"
 
     return False, "need_auth"
@@ -383,8 +384,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if user_id in auth_blocked:
                 block_until = auth_blocked[user_id]
                 if datetime.now().timestamp() < block_until:
-                    remaining_time = int(block_until -
-                                         datetime.now().timestamp())
+                    remaining_time = int(block_until - datetime.now().timestamp())
                     minutes = remaining_time // 60
                     seconds = remaining_time % 60
 
@@ -430,8 +430,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                         reply_markup=MAIN_KEYBOARD)
 
 
-async def handle_password_input(update: Update,
-                                context: ContextTypes.DEFAULT_TYPE):
+async def handle_password_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка ввода пароля"""
     user_id = update.effective_user.id
     message_text = update.message.text
@@ -506,8 +505,7 @@ async def send_about_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(about_text, reply_markup=MAIN_KEYBOARD)
 
 
-async def handle_back_button(update: Update,
-                             context: ContextTypes.DEFAULT_TYPE):
+async def handle_back_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик кнопки Назад"""
     user_id = update.effective_user.id
     user_state = USER_STATES.get(user_id, "main")
@@ -530,8 +528,7 @@ async def handle_back_button(update: Update,
                                         reply_markup=MAIN_KEYBOARD)
 
 
-async def handle_notes_menu(update: Update,
-                            context: ContextTypes.DEFAULT_TYPE):
+async def handle_notes_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик меню заметок"""
     message_text = update.message.text
     user_id = update.effective_user.id
@@ -659,8 +656,7 @@ async def add_to_note(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response, reply_markup=notes_keyboard)
 
 
-async def send_current_lesson(update: Update,
-                              context: ContextTypes.DEFAULT_TYPE):
+async def send_current_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Текущий урок"""
     status, lesson_num, lesson_info = get_current_lesson_info()
     now = get_moscow_time()
@@ -775,8 +771,7 @@ async def send_next_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
             subject, room = lesson_info.split(" / ")
             emoji = SUBJECT_EMOJIS.get(subject, "📚")
             # Время начала следующего урока
-            next_lesson_time = now + timedelta(minutes=BREAK_DURATION -
-                                               (now.minute % 15))
+            next_lesson_time = now + timedelta(minutes=BREAK_DURATION - (now.minute % 15))
             response += f"📅 Следующий урок ({lesson_num}):\n\n"
             response += f"{emoji} {subject}\n"
             response += f"🚪{room}\n"
@@ -804,8 +799,7 @@ async def send_next_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(response, reply_markup=MAIN_KEYBOARD)
 
 
-async def send_tomorrow_schedule(update: Update,
-                                 context: ContextTypes.DEFAULT_TYPE):
+async def send_tomorrow_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Расписание на завтра с временами"""
     day_name, lessons, date, day_num = get_day_schedule(1)
     emoji = DAY_EMOJIS[day_num]
@@ -823,8 +817,7 @@ async def send_tomorrow_schedule(update: Update,
     await update.message.reply_text(response, reply_markup=MAIN_KEYBOARD)
 
 
-async def send_week_schedule(update: Update,
-                             context: ContextTypes.DEFAULT_TYPE):
+async def send_week_schedule(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Полное расписание на всю неделю"""
     today = get_moscow_time()
 
@@ -857,8 +850,7 @@ async def send_week_schedule(update: Update,
     await update.message.reply_text(response, reply_markup=MAIN_KEYBOARD)
 
 
-async def send_today_lessons(update: Update,
-                             context: ContextTypes.DEFAULT_TYPE):
+async def send_today_lessons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Список всех уроков сегодня с временами"""
     day_name, lessons, date, day_num = get_day_schedule(0)
     emoji = DAY_EMOJIS[day_num]
@@ -875,8 +867,7 @@ async def send_today_lessons(update: Update,
 
     for i, lesson in enumerate(lessons, 1):
         start_time = current_time.strftime("%H:%M")
-        end_time = (current_time +
-                    timedelta(minutes=LESSON_DURATION)).strftime("%H:%M")
+        end_time = (current_time + timedelta(minutes=LESSON_DURATION)).strftime("%H:%M")
 
         if " / " in lesson:
             subject, room = lesson.split(" / ")
@@ -908,6 +899,16 @@ async def next_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_next_lesson(update, context)
 
 
+async def week_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /week"""
+    await send_week_schedule(update, context)
+
+
+async def today_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Команда /today"""
+    await send_today_lessons(update, context)
+
+
 def main():
     """Запуск бота"""
     application = Application.builder().token(TOKEN).build()
@@ -917,8 +918,8 @@ def main():
     application.add_handler(CommandHandler("tomorrow", tomorrow_command))
     application.add_handler(CommandHandler("now", now_command))
     application.add_handler(CommandHandler("next", next_command))
-    application.add_handler(CommandHandler("week", send_week_schedule))
-    application.add_handler(CommandHandler("today", send_today_lessons))
+    application.add_handler(CommandHandler("week", week_command))
+    application.add_handler(CommandHandler("today", today_command))
 
     # Регистрируем обработчик текстовых сообщений
     application.add_handler(
@@ -952,15 +953,10 @@ def main():
 
     # Показываем текущее время МСК при запуске
     moscow_time = get_moscow_time()
-    print(
-        f"\n🕐 Текущее время МСК: {moscow_time.strftime('%H:%M:%S %d.%m.%Y')}")
+    print(f"\n🕐 Текущее время МСК: {moscow_time.strftime('%H:%M:%S %d.%m.%Y')}")
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
-import time
-
-def main():
-    # ... (ВЕСЬ твой текущий код функции main() должен быть здесь) ...
 
 if __name__ == '__main__':
     while True:
@@ -972,6 +968,3 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Бот упал: {e}. Перезапуск через 10 сек.")
             time.sleep(10)
-            
-if __name__ == '__main__':
-    main()
